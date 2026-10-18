@@ -29,9 +29,31 @@
     if (!audio.paused) { audio.pause(); return; }
     if (audio.ended) audio.currentTime = 0;
     try { await audio.play(); }
-    catch (_) { if (status) status.textContent = '音声を再生できませんでした。もう一度再生ボタンを押してください。'; }
+    catch (error) {
+      if (error.name !== 'AbortError' && status) status.textContent = '音声を再生できませんでした。もう一度再生ボタンを押してください。';
+    }
   }));
   document.addEventListener('visibilitychange', () => { if (document.hidden) audios.forEach(audio => audio.pause()); });
+  const clips = [...document.querySelectorAll('.clip')];
+  let clipIndex = 0;
+  function selectClip(index) {
+    clipIndex = Math.max(0, Math.min(clips.length - 1, index));
+    audios.forEach(audio => audio.pause());
+    clips.forEach((clip, position) => { clip.hidden = position !== clipIndex; });
+    const audio = clips[clipIndex].querySelector('audio');
+    if (audio.readyState > 0) audio.currentTime = 0;
+    document.getElementById('clip-position').textContent = `${String(clipIndex + 1).padStart(2, '0')} / ${String(clips.length).padStart(2, '0')}`;
+    document.querySelector('[data-clip-direction="-1"]').disabled = clipIndex === 0;
+    document.querySelector('[data-clip-direction="1"]').disabled = clipIndex === clips.length - 1;
+    if (status) status.textContent = '';
+  }
+  if (clips.length) {
+    selectClip(0);
+    document.querySelectorAll('[data-clip-direction]').forEach(button => {
+      button.addEventListener('click', () => selectClip(clipIndex + Number(button.dataset.clipDirection)));
+    });
+  }
+  document.querySelectorAll('.translation').forEach(translation => { translation.hidden = true; });
   document.querySelector('.translation-toggle')?.addEventListener('click', event => {
     const button = event.currentTarget;
     const visible = button.getAttribute('aria-pressed') !== 'true';
@@ -40,11 +62,11 @@
     document.querySelectorAll('.translation').forEach(translation => { translation.hidden = !visible; });
   });
   const steps = [
-    ['まずは、耳だけで。', '英文を見ずに音声を聴き、短い問題で内容を確かめます。最初から全部聞き取れなくても大丈夫。'],
-    ['意味と音をつなぐ。', '英文と日本語訳、語句や音の変化を確認します。「そう言っていたのか」を、一つずつ増やしていきます。'],
-    ['1文ずつ、自分の声で。', 'お手本を聴いたら、その文を録音。自分の声を聴き返し、次の文へ。長い英文も、1文ずつ練習できます。'],
-    ['お手本と、一緒に。', '英文を見ながら、お手本の音声と同時に声を出します。英語のまとまりや、強く読む言葉を意識してみましょう。'],
-    ['文字を離れて、追いかける。', '英文を隠して、お手本から少し遅れて話します。録音を聴き比べ、次に練習する1点を確かめましょう。']
+    ['まずは、耳だけで。', '英文を見ずに聴いて、内容を確かめる。'],
+    ['意味と音が、つながる。', '対訳と解説で、聞き取れなかった言葉を確認。'],
+    ['1文ずつ、自分の声で。', 'お手本を聴いて録音。自分の声を聴き返す。'],
+    ['お手本と、一緒に。', '英文を見ながら、音声に重ねて読む。'],
+    ['文字を離れて、話す。', '少し遅れて追いかける。録音を比べて、もう一度。']
   ];
   const tabs = [...document.querySelectorAll('[role="tab"]')];
   function selectStep(tab) {
@@ -52,6 +74,7 @@
     tabs.forEach(item => { item.setAttribute('aria-selected', String(item === tab)); item.tabIndex = item === tab ? 0 : -1; });
     document.getElementById('step-panel').setAttribute('aria-labelledby', tab.id);
     document.getElementById('step-number').textContent = String(index + 1).padStart(2, '0');
+    document.querySelector('.step-display-number').textContent = String(index + 1).padStart(2, '0');
     document.getElementById('step-title').textContent = steps[index][0];
     document.getElementById('step-description').textContent = steps[index][1];
   }
