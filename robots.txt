@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://ki-84.github.io/shadow-step-support/sitemap.xml

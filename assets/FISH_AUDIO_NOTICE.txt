@@ -1,0 +1,18 @@
+These Fish Audio Materials are licensed under the Fish Audio Community License, Version 1.0. Copyright © 39 AI, INC. All Rights Reserved.
+
+Built with Fish Audio.
+
+The attribution above applies to the Fish Audio Materials: Fish Audio Drama 3 and its audio codec, from
+https://huggingface.co/fishaudio/drama-3 at revision e0a9218aa48888270f06ef1ed9ea67622c0e17d2, of which the files in
+this repository are a Derivative Work. A copy of the Fish Audio Community License, Version 1.0, is in LICENSE.
+
+The files in this repository were made by sakasegawa for speech.cpp (https://github.com/nyosegawa/speech.cpp), which
+changed the Fish Audio Materials as follows:
+
+- The model's weights, released with the routed experts in FP8 (blocks of 128 x 128 values with a float32 scale each)
+  and the rest in BF16, and the audio codec, released mostly in float32, were converted to one GGUF file in float32, in
+  speech.cpp's own layout: each 128 x 128 block of the experts multiplied by its scale, each layer's experts of a
+  projection stacked into one tensor, the codec's weight normalization folded into its weights, some matrices split
+  or reordered, and the output head and the audio decoder's code embeddings cut to the rows the model reads.
+- Each file in this repository was quantized from that float32 file by speech.cpp's `speech quantize` to the weight
+  type in its name (F16, Q8_0, Q6_K, Q5_K or Q4_K), which changes the values of the weights it quantizes.
